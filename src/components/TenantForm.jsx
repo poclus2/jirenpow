@@ -179,6 +179,7 @@ export default function TenantForm({ onSubmit }) {
               onChange={handleChange}
               required
               min="1"
+              step="0.01"
             />
           </div>
         </div>
