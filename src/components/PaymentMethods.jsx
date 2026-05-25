@@ -1,45 +1,51 @@
 import React, { useState } from 'react';
-import { CreditCard, Landmark, Repeat } from 'lucide-react';
+import { CreditCard, Landmark, Repeat, Loader2 } from 'lucide-react';
 
 export default function PaymentMethods({ tenantData, onPaymentComplete, onBack }) {
   const [selectedMethod, setSelectedMethod] = useState('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [rib, setRib] = useState('');
 
+  const [showRedirectPopup, setShowRedirectPopup] = useState(false);
+
   const handleTaraPayment = async () => {
     setIsProcessing(true);
+    setShowRedirectPopup(true);
     try {
-      // Intégration de l'API Tara Money
-      const response = await fetch('/api/tara/paymentlinks', {
+      // Attendre 4 secondes pour l'effet visuel de redirection + l'appel API
+      const minDelayPromise = new Promise(resolve => setTimeout(resolve, 4000));
+      
+      const fetchPromise = fetch('/api/tara/paymentlinks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          apiKey: 'eO4qfliMGo6yvkSmPqDPKUoH', // Clé de production Tara Money
+          apiKey: 'eO4qfliMGo6yvkSmPqDPKUoH', 
           businessId: '5AuML9WXgI',
           productId: `loyer-${Date.now()}`,
           productName: `Paiement Loyer - ${tenantData.firstName} ${tenantData.lastName}`,
-          productPrice: Math.round(parseFloat(tenantData.rentAmount) * 655.957), // Conversion EUR vers FCFA requise par Tara Money
+          productPrice: Math.round(parseFloat(tenantData.rentAmount.toString().replace(',', '.')) * 655.957), 
           currency: 'EUR',
           productDescription: `Paiement de loyer pour ${tenantData.address}`,
           productPictureUrl: 'https://placehold.co/400',
-          returnUrl: window.location.protocol === 'https:' ? window.location.href : 'https://votre-site-en-production.com/success', // Doit être HTTPS
+          returnUrl: window.location.protocol === 'https:' ? window.location.href : 'https://votre-site-en-production.com/success', 
           webHookUrl: 'https://example.com/webhook'
         }),
-      });
+      }).then(res => res.json());
 
-      const data = await response.json();
+      const [, data] = await Promise.all([minDelayPromise, fetchPromise]);
       
       if ((data.status === 'SUCCESS' || data.status === 'success') && data.cardLink) {
-        // Rediriger vers le lien de paiement par carte Tara Money
         window.location.href = data.cardLink;
       } else {
+        setShowRedirectPopup(false);
         alert(`Erreur lors de la génération du lien de paiement Tara: ${data.message || 'Erreur inconnue'}`);
         setIsProcessing(false);
       }
     } catch (error) {
       console.error('Erreur:', error);
+      setShowRedirectPopup(false);
       alert('Erreur de connexion à l\'API Tara Money. Mode test activé : Simulation du succès.');
       // Fallback pour la démo / test
       setTimeout(() => {
@@ -158,6 +164,30 @@ export default function PaymentMethods({ tenantData, onPaymentComplete, onBack }
           {isProcessing ? 'Traitement en cours...' : 'Confirmer le paiement'}
         </button>
       </div>
+
+      {showRedirectPopup && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(4px)'
+        }}>
+          <style>{`
+            @keyframes spin { 100% { transform: rotate(360deg); } }
+          `}</style>
+          <div className="slide-in" style={{
+            background: 'white', padding: '2.5rem', borderRadius: 'var(--radius-lg)',
+            textAlign: 'center', boxShadow: 'var(--shadow-lg)',
+            maxWidth: '400px', width: '90%'
+          }}>
+            <Loader2 size={48} color="var(--primary)" style={{ animation: 'spin 1s linear infinite', margin: '0 auto 1.5rem auto' }} />
+            <h3 style={{ marginBottom: '1rem', color: 'var(--text-main)', fontSize: '1.25rem' }}>Redirection sécurisée</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+              Veuillez patienter, vous allez être redirigé vers l'interface de paiement sécurisée de notre partenaire Tara Money...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
