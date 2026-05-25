@@ -35,7 +35,7 @@ app.post('/api/tara/paymentlinks', async (req, res) => {
 });
 
 // Toutes les autres requêtes retournent l'index.html (pour le routing React)
-app.get('*', (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
