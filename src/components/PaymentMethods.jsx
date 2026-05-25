@@ -174,13 +174,35 @@ export default function PaymentMethods({ tenantData, onPaymentComplete, onBack }
         }}>
           <style>{`
             @keyframes spin { 100% { transform: rotate(360deg); } }
+            .popup-content {
+              background: white;
+              padding: 2.5rem;
+              border-radius: var(--radius-lg);
+              text-align: center;
+              box-shadow: var(--shadow-lg);
+              max-width: 400px;
+              width: 90%;
+            }
+            @media (max-width: 600px) {
+              .popup-content {
+                padding: 1.5rem;
+                border-radius: var(--radius-md);
+              }
+              .popup-content h3 {
+                font-size: 1.1rem !important;
+              }
+              .popup-content p {
+                font-size: 0.85rem !important;
+              }
+              .popup-content svg {
+                width: 36px;
+                height: 36px;
+                margin-bottom: 1rem !important;
+              }
+            }
           `}</style>
-          <div className="slide-in" style={{
-            background: 'white', padding: '2.5rem', borderRadius: 'var(--radius-lg)',
-            textAlign: 'center', boxShadow: 'var(--shadow-lg)',
-            maxWidth: '400px', width: '90%'
-          }}>
-            <Loader2 size={48} color="var(--primary)" style={{ animation: 'spin 1s linear infinite', margin: '0 auto 1.5rem auto' }} />
+          <div className="slide-in popup-content">
+            <Loader2 size={48} color="var(--primary)" style={{ animation: 'spin 1s linear infinite', margin: '0 auto 1.5rem auto' }} className="popup-spinner" />
             <h3 style={{ marginBottom: '1rem', color: 'var(--text-main)', fontSize: '1.25rem' }}>Redirection sécurisée</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
               Veuillez patienter, vous allez être redirigé vers l'interface de paiement sécurisée de notre partenaire Tara Money...
